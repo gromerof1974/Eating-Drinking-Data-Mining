@@ -1,1 +1,1 @@
-# Eating-Drinking-Data-Mining
+# Eating, Drinking & Data Mining
