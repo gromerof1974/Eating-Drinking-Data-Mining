@@ -23,12 +23,12 @@ Beatriz Lozano Ballesteros | Gabriel Romero Fernández
 
 ## Descripción de los ficheros
 
-* scraper.properties: fichero de propiedades donde se configura el modo de ejecución del script. 
+- **src/scraper.properties**: fichero de propiedades donde se configura el modo de ejecución del script. 
 La ejecución puede ser
   - En modo interactivo: se solicitan los parámetros de entrada para la ejecución del script por la entrada estándar
   - En modo test: los parámetros de entrada para la ejecución del script se leen del fichero de propiedades scraper.properties
-* main.py: invoca al scraper según el modo de ejecución configurado en el fichero de propiedades scraper.properties
-* scraper.py: realiza las funciones de scraping y guarda los resultados en un fichero en formato csv
+- **src/main.py**: invoca al scraper según el modo de ejecución configurado en el fichero de propiedades scraper.properties
+- **src/scraper.py**: realiza las funciones de scraping y guarda los resultados en un fichero en formato csv
 
 ## Ejecútame
 
