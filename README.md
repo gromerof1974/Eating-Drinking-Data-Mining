@@ -19,7 +19,8 @@ Los datos se han extraído de la web [restaurantguru.com](https://restaurantguru
 
 ## Miembros del equipo
 
-Beatriz Lozano Ballesteros | Gabriel Romero Fernández
+- Beatriz Lozano Ballesteros
+- Gabriel Romero Fernández
 
 ## Descripción de los ficheros
 
@@ -35,6 +36,8 @@ La ejecución puede ser
 Utilizando esta sentencia:
 
 python main.py
+
+**Nota**: Si en la ejecución se indica que se habilite el auto scroll, se llamará a webdriver de la librería Selenium. En este caso, será necesario tener en el path el driver  chromedriver.exe, que se puede descargar en la siguiente dirección: https://sites.google.com/chromium.org/driver/
 
 ## DOI de Zenodo
 
