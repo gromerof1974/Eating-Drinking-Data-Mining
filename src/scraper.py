@@ -30,7 +30,7 @@ def scrape(city, debug_enabled, scroll_down):
         dic.update(get_page_data(city, key, links_dictionary[key], debug_enabled))
         i += 1
  
-    save_dictionary_to_file(dic, city.replace(' ', '_') + '_restaurants.csv', debug_enabled)
+    save_dictionary_to_file(dic, 'EDDM_' + city.replace(' ', '_') + '.csv', debug_enabled)
 
     elapsed_time = time.time() - start_time
     print('Total elapsed time ',  time.strftime("%H:%M:%S", time.gmtime(elapsed_time)), '\n')
@@ -47,7 +47,7 @@ def get_links(city, debug_enabled, scroll_down):
     links_dictionary = {}
     
     referer = 'https://es.restaurantguru.com/' 
-    url = referer + city.lower().replace(' ', '-')
+    url = referer + 'restaurant-' + city.lower().replace(' ', '-') + '-t1'
     if (scroll_down):
         show_browser = False    
         html = scroll_down_to_bottom(url, show_browser, debug_enabled)
@@ -71,7 +71,7 @@ Returns the page source after scrolling to the end using Selenium library
 -------------------------------------------------------------------------------------------------------    
 ''' 
 def scroll_down_to_bottom(url, show_browser, debug_enabled):
-    SCROLL_PAUSE_TIME = 2.0
+    SCROLL_PAUSE_TIME = 3.0
 
     print('Init Selenium scroll down to bottom (this operation may take several seconds)...') 
     driver = get_chrome_driver(show_browser)
