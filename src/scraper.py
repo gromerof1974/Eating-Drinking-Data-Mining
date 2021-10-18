@@ -456,8 +456,7 @@ def save_dictionary_to_file(dic, file_name, debug_enabled):
         print('Saving file ', file_name) 
     
     with open(file_name, 'w', encoding="utf-8") as f:
-        f.write('name;avg_price;cuisine_features;telephone;address;location;opinions;ratings;comments_count;\
-                 features;schedule;appetizing_dishes;restaurant_features;similar_restaurants;web_site\n')
+        f.write('name;avg_price;cuisine_features;telephone;address;location;opinions;ratings;comments_count;features;schedule;appetizing_dishes;restaurant_features;similar_restaurants;web_site\n')
         for key in dic.keys():
             f.write('%s\n' %(dic[key]))
     
