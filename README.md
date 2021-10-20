@@ -41,7 +41,7 @@ python main.py
 
 ## DOI de Zenodo
 
-Digital Object Identifier (DOI) de la dataset en Zenodo
+Digital Object Identifier (DOI) del dataset en Zenodo:
 
 https://doi.org/10.5281/zenodo.5585051
 
