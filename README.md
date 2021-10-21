@@ -26,8 +26,8 @@ Los datos se han extraído de la web [restaurantguru.com](https://restaurantguru
 
 - **src/scraper.properties**: fichero de propiedades donde se configura el modo de ejecución del script. 
 La ejecución puede ser
-  - En modo interactivo: se solicitan los parámetros de entrada para la ejecución del script por la entrada estándar
-  - En modo test: los parámetros de entrada para la ejecución del script se leen del fichero de propiedades scraper.properties
+  - En modo interactivo: se solicitan los parámetros de ejecución del script por pantalla
+  - En modo test: se leen los parámetros de ejecución del script de la sección Test del fichero de propiedades
 - **src/main.py**: invoca al scraper según el modo de ejecución configurado en el fichero de propiedades scraper.properties
 - **src/scraper.py**: realiza las funciones de scraping y guarda los resultados en un fichero en formato csv
 
