@@ -171,7 +171,7 @@ def get_headers(referer):
 
 '''
 -------------------------------------------------------------------------------------------------------
-Get page data 
+Get page 
 -------------------------------------------------------------------------------------------------------    
 ''' 
 def get_page(city, page_name, url, debug_enabled):
@@ -326,7 +326,13 @@ def get_opinions(soup):
     json_object = json.dumps(dic)        
     return json_object.replace('\n', '')
     
-
+'''
+-------------------------------------------------------------------------------------------------------
+Get ratings
+In the case of google and trip ratings, the ratings are obtained through a simple transformation 
+of the width attribute: width*5/100
+-------------------------------------------------------------------------------------------------------    
+''' 
 def get_ratings(soup):
     dic = {}
     list_tag_a = soup.findAll('a', {'class': 'rating_list_right'})
