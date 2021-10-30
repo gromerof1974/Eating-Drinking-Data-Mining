@@ -7,10 +7,23 @@ Scraper to get data info from the restaurants of a city
 import json 
 import requests
 import time
+import os
 from numpy import random
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from time import sleep
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
+
+
+
+DEFAULT_TIMEOUT = 5 # seconds
+MAX_RETRY = 3
+CLIENT_ERROR_TOO_MANY_REQUEST = 429
+SERVER_ERROR_INTERNAL_SERVER_ERROR = 500
+SERVER_ERROR_BAD_GETAWAY = 502
+SERVER_ERROR_SERVICE_UNAVAILABLE = 503
+SERVER_ERROR_GATEWAY_TIMEOUT = 504
 
 '''
 -------------------------------------------------------------------------------------------------------
@@ -18,22 +31,29 @@ scrape
 -------------------------------------------------------------------------------------------------------    
 '''
 def scrape(city, debug_enabled, scroll_down):
-    start_time = time.time()
+    full_process_start_time = time.time()
 
+    csv_file_name = 'EDDM_' + city.replace(' ', '_') + '.csv'
+    remove_file(csv_file_name)
+    header_line = 'name;avg_price;cuisine_features;telephone;address;location;opinions;ratings;comments_count;features;schedule;appetizing_dishes;restaurant_features;similar_restaurants;web_site'
+    append_line_to_file(csv_file_name, header_line, debug_enabled)
+    
     links_dictionary = get_links(city, debug_enabled, scroll_down)
     print_dictionary(links_dictionary, debug_enabled)
-    dic = {}
     i = 1
     len_links_dictionary = len(links_dictionary)
     for key in links_dictionary:
         print('Processing', i, 'of', len_links_dictionary)
-        dic.update(get_page_data(city, key, links_dictionary[key], debug_enabled))
+        response_start_time = time.time()
+        page = get_page(city, key, links_dictionary[key], debug_enabled)
+        response_elapsed_time = time.time() - response_start_time
+        data_line = get_page_data(page, key, debug_enabled)
+        append_line_to_file(csv_file_name, data_line, debug_enabled)
+        sleep_random(response_elapsed_time, debug_enabled)
         i += 1
  
-    save_dictionary_to_file(dic, 'EDDM_' + city.replace(' ', '_') + '.csv', debug_enabled)
-
-    elapsed_time = time.time() - start_time
-    print('Total elapsed time ',  time.strftime("%H:%M:%S", time.gmtime(elapsed_time)), '\n')
+    full_process_elapsed_time = time.time() - full_process_start_time
+    print('Total elapsed time ',  time.strftime("%H:%M:%S", time.gmtime(full_process_elapsed_time)), '\n')
 
 
 '''
@@ -53,11 +73,9 @@ def get_links(city, debug_enabled, scroll_down):
         html = scroll_down_to_bottom(url, show_browser, debug_enabled)
         soup = BeautifulSoup(html, features='html.parser')
     else:    
-        page = requests.get(url, headers = get_headers(referer))
+        request_session = get_request_session_with_retry_options()
+        page = request_session.get(url, headers = get_headers(referer), timeout=DEFAULT_TIMEOUT)      
         soup = BeautifulSoup(page.content, features='html.parser')
-        if page.status_code != 200:
-            print('The page could not be retrieved', url)
-            return links_dictionary
         
     lista_tag_a = soup.findAll('a', {'class': 'notranslate title_url'})
     for tag_a in lista_tag_a:
@@ -107,25 +125,26 @@ def scroll_down_to_bottom(url, show_browser, debug_enabled):
 '''
 -------------------------------------------------------------------------------------------------------
 Return Chrome driver to interact with the web page
+user-agent is set to Chrome
 -------------------------------------------------------------------------------------------------------    
 ''' 
 def get_chrome_driver(show_browser):
-    if (show_browser):
-        driver = webdriver.Chrome('./chromedriver.exe')
-    else:
-        op = webdriver.ChromeOptions()
+    op = webdriver.ChromeOptions()
+    if (show_browser == False):
         op.add_argument('--headless')
-        driver = webdriver.Chrome('./chromedriver.exe', options=op)
+
+    op.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36")
+    driver = webdriver.Chrome('./chromedriver.exe', options=op)
     return driver   
 
     
 '''
 -------------------------------------------------------------------------------------------------------
-Sleep a random number of seconds between 1 and 2
+Sleep for: (response_elapsed_time) + (random number of seconds between 1 and 2)
 -------------------------------------------------------------------------------------------------------    
 '''    
-def sleep_random(debug_enabled):
-    sleep_time = random.uniform(1, 2)
+def sleep_random(response_elapsed_time, debug_enabled):
+    sleep_time = response_elapsed_time + random.uniform(1, 2)
     if (debug_enabled):
         print('Sleep for ', sleep_time, 'seconds')
     sleep(sleep_time)
@@ -155,20 +174,53 @@ def get_headers(referer):
 Get page data 
 -------------------------------------------------------------------------------------------------------    
 ''' 
-def get_page_data(city, page_name, url, debug_enabled):
-    dic = {}
-    
-    start_time = time.time()
-
-    sleep_random(debug_enabled)
-
+def get_page(city, page_name, url, debug_enabled):
     if (debug_enabled):
         print('Processing [', page_name, ']: ', url)
 
-
     referer = 'https://es.restaurantguru.com/' + city.lower().replace(' ', '-') 
     
-    page = requests.get(url, headers = get_headers(referer))
+    request_session = get_request_session_with_retry_options()
+    page = request_session.get(url, headers = get_headers(referer), timeout=DEFAULT_TIMEOUT)      
+    return page
+
+
+'''
+-------------------------------------------------------------------------------------------------------
+Get request session object prepared with a retry strategy
+For changing how long the processes will sleep between failed requests we use backoff_factor = 1.
+The algorithm is as follows: {backoff factor} * (2 ** ({number of total retries} - 1))
+-------------------------------------------------------------------------------------------------------    
+''' 
+def get_request_session_with_retry_options():
+    common_errors = [CLIENT_ERROR_TOO_MANY_REQUEST]
+    common_errors.append(SERVER_ERROR_INTERNAL_SERVER_ERROR)
+    common_errors.append(SERVER_ERROR_BAD_GETAWAY)
+    common_errors.append(SERVER_ERROR_SERVICE_UNAVAILABLE)
+    common_errors.append(SERVER_ERROR_GATEWAY_TIMEOUT)
+    
+    http_methods_to_retry_on = ["HEAD", "GET", "OPTIONS"] 
+    
+    retry_strategy = Retry(
+        total = MAX_RETRY,
+        backoff_factor = 1,
+        status_forcelist = common_errors,
+        method_whitelist=http_methods_to_retry_on
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    request_session = requests.Session()  
+    request_session.mount("https://", adapter)
+    return request_session
+
+
+'''
+-------------------------------------------------------------------------------------------------------
+Get page data: scrape page
+-------------------------------------------------------------------------------------------------------    
+''' 
+def get_page_data(page, page_name, debug_enabled):
+    start_time = time.time()
+
     soup = BeautifulSoup(page.content, features='html.parser')
 
     avg_price = get_average_price(soup)
@@ -185,23 +237,6 @@ def get_page_data(city, page_name, url, debug_enabled):
     restaurant_features = get_restaurant_features(soup)
     similar_restaurants = get_similar_restaurants(soup)
     web_site = get_web_site(soup)
-    
-    csv_line = list()
-    csv_line.append(page_name)
-    csv_line.append(avg_price)
-    csv_line.append(cuisine_features) 
-    csv_line.append(telephone) 
-    csv_line.append(address)
-    csv_line.append(location)
-    csv_line.append(opinions)
-    csv_line.append(ratings)
-    csv_line.append(comments_count)
-    csv_line.append(features)
-    csv_line.append(schedule)
-    csv_line.append(appetizing_dishes)
-    csv_line.append(restaurant_features)
-    csv_line.append(similar_restaurants)
-    csv_line.append(web_site)    
     
     if (debug_enabled):
         print('\t', 'avg_price: ', avg_price)
@@ -220,10 +255,25 @@ def get_page_data(city, page_name, url, debug_enabled):
         print('\t', 'web_site: ', web_site)
         
         elapsed_time = time.time() - start_time
-        print('Processing [', page_name, ']: elapsed time ',  time.strftime("%H:%M:%S", time.gmtime(elapsed_time)), '\n')
+        print('Processing [', page_name, ']: elapsed time ',  time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
     
-    dic.update({page_name : ';'.join(csv_line)})
-    return dic  
+    csv_line = list()
+    csv_line.append(page_name)
+    csv_line.append(avg_price)
+    csv_line.append(cuisine_features) 
+    csv_line.append(telephone) 
+    csv_line.append(address)
+    csv_line.append(location)
+    csv_line.append(opinions)
+    csv_line.append(ratings)
+    csv_line.append(comments_count)
+    csv_line.append(features)
+    csv_line.append(schedule)
+    csv_line.append(appetizing_dishes)
+    csv_line.append(restaurant_features)
+    csv_line.append(similar_restaurants)
+    csv_line.append(web_site)   
+    return ';'.join(csv_line)  
 
 
 def get_average_price(soup):
@@ -445,21 +495,30 @@ def print_dictionary(dic, debug_enabled):
 
     print('\n') 
     
-    
+
 ''' 
 -------------------------------------------------------------------------------------------------------
-Save dictionary to file
+Append line to file
 -------------------------------------------------------------------------------------------------------
 '''
-def save_dictionary_to_file(dic, file_name, debug_enabled):
+def append_line_to_file(file_name, line, debug_enabled):
     if (debug_enabled):
-        print('Saving file ', file_name) 
+        print('Saving line to', file_name)
+        print(line)  
     
-    with open(file_name, 'w', encoding="utf-8") as f:
-        f.write('name;avg_price;cuisine_features;telephone;address;location;opinions;ratings;comments_count;features;schedule;appetizing_dishes;restaurant_features;similar_restaurants;web_site\n')
-        for key in dic.keys():
-            f.write('%s\n' %(dic[key]))
+    with open(file_name, 'a', encoding="utf-8") as f:
+        f.write('%s\n' %(line))
     
     if (debug_enabled):
-        print('File ', file_name, ' saved')           
-    
+        print('New line saved\n')   
+        
+
+''' 
+-------------------------------------------------------------------------------------------------------
+Remove file if exists
+-------------------------------------------------------------------------------------------------------
+'''
+def remove_file(file_name):
+    if os.path.exists(file_name):
+        os.remove(file_name)
+
