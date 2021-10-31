@@ -7,12 +7,12 @@ Este proyecto surge, por tanto, como respuesta a la *Práctica 1* de dicha asign
 alumno aprenda a identificar los datos relevantes para un proyecto analítico y a utilizar herramientas de 
 extracción de datos.
 
-En **Eating, drinking & data mining**, hemos generado una aplicación en lenguaje de programación *python*, en la que 
+En **Eating, Drinking & Data Mining**, hemos generado una aplicación en lenguaje de programación *python*, en la que 
 partiendo del nombre de una ciudad, se nos genere un dataset conteniendo todos los restaurantes de ese núcleo
 poblacional así como sus atributos más interesantes para aplicar minería de datos: horarios de apertura, tipo de
 cocina, número de comentarios en redes sociales, etc.
 
-Los datos se han extraído de la web [restaurantguru.com](https://restaurantguru.com/)
+Los datos se han extraído de la web <a href="https://restaurantguru.com/" target="_blank">restaurantguru.com</a>
 
 ![image](https://user-images.githubusercontent.com/92667730/137620094-94f98884-0130-427a-b91b-d1dba5225d3d.png)
 
@@ -37,11 +37,12 @@ Utilizando esta sentencia:
 
 python main.py
 
-**Nota**: Si en la ejecución se indica que se habilite el auto scroll, se llamará a webdriver de la librería Selenium. En este caso, será necesario tener en el path el driver  chromedriver.exe, que se puede descargar en la siguiente dirección: https://sites.google.com/chromium.org/driver/
+**Nota**: Si en la ejecución se indica que se habilite el auto scroll, se llamará a webdriver de la librería Selenium. En este caso, será necesario tener en el path el driver  chromedriver.exe, que se puede descargar en la siguiente dirección: <a href="https://sites.google.com/chromium.org/driver/" target="_blank">https://sites.google.com/chromium.org/driver/</a>
 
 ## DOI de Zenodo
 
 Digital Object Identifier (DOI) del dataset en Zenodo:
 
-https://doi.org/10.5281/zenodo.5585051
+<a href="https://doi.org/10.5281/zenodo.5585051" target="_blank">https://doi.org/10.5281/zenodo.5585051</a>
+
 
