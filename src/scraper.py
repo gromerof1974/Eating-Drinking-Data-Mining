@@ -19,7 +19,7 @@ from urllib3.util import Retry
 
 DEFAULT_TIMEOUT = 5 # seconds
 MAX_RETRY = 3
-CLIENT_ERROR_TOO_MANY_REQUEST = 429
+CLIENT_ERROR_TOO_MANY_REQUESTS = 429
 SERVER_ERROR_INTERNAL_SERVER_ERROR = 500
 SERVER_ERROR_BAD_GETAWAY = 502
 SERVER_ERROR_SERVICE_UNAVAILABLE = 503
@@ -193,7 +193,7 @@ The algorithm is as follows: {backoff factor} * (2 ** ({number of total retries}
 -------------------------------------------------------------------------------------------------------    
 ''' 
 def get_request_session_with_retry_options():
-    common_errors = [CLIENT_ERROR_TOO_MANY_REQUEST]
+    common_errors = [CLIENT_ERROR_TOO_MANY_REQUESTS]
     common_errors.append(SERVER_ERROR_INTERNAL_SERVER_ERROR)
     common_errors.append(SERVER_ERROR_BAD_GETAWAY)
     common_errors.append(SERVER_ERROR_SERVICE_UNAVAILABLE)
